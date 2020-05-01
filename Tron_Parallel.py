@@ -156,7 +156,7 @@ def Simulate(Game):
 
         #debug
         if Debug : AffGrilles(G,X,Y)
-        if Debug : time.sleep(2)
+        if Debug : time.sleep(0.1)
 
     print("Scores : ",np.mean(S))
 

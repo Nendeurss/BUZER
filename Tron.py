@@ -194,7 +194,7 @@ def MonteCarlo(Game, nbParties):
     return Total / nbParties
 
 # Renvoie la position du prochain coup
-def NextPlay(Game, PlayerX, PlayerY):
+def NextPlay(Game):
     # On récupère les position(s) possible(s)
     possiblePlays = FindpossiblePlays(Game)
     # Si il n'y a aucune position possible, fin de jeu, on retourne une liste vide
@@ -209,7 +209,7 @@ def NextPlay(Game, PlayerX, PlayerY):
     # Pour chaque position possible
     for i in possiblePlays:
         # On place le joueur dans la copie de grille
-        Game2.Grille[PlayerX, PlayerY] = 2
+        Game2.Grille[Game.PlayerX, Game.PlayerY] = 2
         Game2.PlayerX = i[0]
         Game2.PlayerY = i[1]
         # On ajoute le score retourné de MonteCarlo dans la liste de score
@@ -235,7 +235,7 @@ def Play(Game):
     Game.Grille[x, y] = 2
 
     # On récupère les de position(s) possible(s)
-    possiblePlay = NextPlay(Game, x, y)
+    possiblePlay = NextPlay(Game)
     # Si il n'y a aucune position possible, fin de jeu, on retourne True
     if len(possiblePlay) == 0:
         return True
