@@ -88,13 +88,18 @@ def Simulate(Game):
 
     # VOTRE CODE ICI
 
+    #On créer le vecteur Vgauche, et on met tout à True
     Vgauche = np.tile(True,nb)
+    Vdroite = np.tile(True,nb)
+    Vhaut = np.tile(True,nb)
+    Vbas = np.tile(True,nb)
+    #On transforme les True en 1 et les False en 0
     Vgauche = (Vgauche == 1)*1
+    Vdroite = (Vdroite == 1)*1
+    Vhaut = (Vhaut == 1)*1
+    Vbas = (Vbas == 1)*1
 
-    LPossibles = np.zeros((nb,4),dtype=np.int8)
-    Indices = np.zeros(nb,dtype=np.int8)
-    print("LPossibles :",LPossibles)
-    print("Vgauche :",Vgauche)
+    
 
     while(boucle) :
         if Debug :print("X : ",X)
@@ -103,7 +108,37 @@ def Simulate(Game):
 
         # marque le passage de la moto
         G[I, X, Y] = 2
+
+        #On créer un vecteur de tableau des coups possibles et on met tout à 0
+        LPossibles = np.zeros((nb,4),dtype=np.int8)
+
+        #On créer un vecteur d'indice et on met tout à zero
+        Indices = np.zeros(nb,dtype=np.int8)
+
+        print("Indices : ",Indices)
+
         Vgauche = (G[I,X-1,Y] == 0)*1
+        Vdroite = (G[I,X+1,Y] == 0)*3
+        Vbas = (G[I,X,Y-1] == 0)*4
+        Vhaut = (G[I,X,Y+1] == 0)*2
+
+        print("Vgauche :",Vgauche)
+
+        LPossibles[I,Indices] = Vgauche
+        print("LPossibles[I,Indices] : ",LPossibles[I,Indices])
+        Indices = Indices + (LPossibles[I,Indices] == 0)*1
+        LPossibles[I,Indices] = Vhaut
+        print("LPossibles[I,Indices] : ",LPossibles[I,Indices])
+        Indices = Indices + (LPossibles[I,Indices] == 0)*1
+        LPossibles[I,Indices] = Vdroite
+        print("LPossibles[I,Indices] : ",LPossibles[I,Indices])
+        Indices = Indices + (LPossibles[I,Indices] == 0)*1
+        LPossibles[I,Indices] = Vbas
+        print("LPossibles[I,Indices] : ",LPossibles[I,Indices])
+        Indices = Indices + (LPossibles[I,Indices] == 0)*1
+
+        print("LPossibles :",LPossibles)
+        print("Indices :",Indices)
 
         if Debug :print("Vgauche : ",Vgauche)
 
