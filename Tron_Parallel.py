@@ -12,7 +12,7 @@ Data = [   [1,1,1,1,1,1,1,1,1,1,1,1,1],
            [1,0,0,0,0,0,0,0,0,0,0,0,1],
            [1,0,0,0,0,0,0,0,0,0,0,0,1],
            [1,0,0,0,0,0,0,0,0,0,0,0,1],
-           [1,0,0,0,0,0,0,0,0,0,0,0,1],
+           [1,0,1,0,0,0,0,0,0,0,0,0,1],
            [1,0,0,0,0,0,0,0,0,0,0,0,1],
            [1,0,0,0,0,0,0,0,0,0,0,0,1],
            [1,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -88,6 +88,14 @@ def Simulate(Game):
 
     # VOTRE CODE ICI
 
+    Vgauche = np.tile(True,nb)
+    Vgauche = (Vgauche == 1)*1
+
+    LPossibles = np.zeros((nb,4),dtype=np.int8)
+    Indices = np.zeros(nb,dtype=np.int8)
+    print("LPossibles :",LPossibles)
+    print("Vgauche :",Vgauche)
+
     while(boucle) :
         if Debug :print("X : ",X)
         if Debug :print("Y : ",Y)
@@ -95,7 +103,9 @@ def Simulate(Game):
 
         # marque le passage de la moto
         G[I, X, Y] = 2
+        Vgauche = (G[I,X-1,Y] == 0)*1
 
+        if Debug :print("Vgauche : ",Vgauche)
 
         # Direction : 2 = vers le haut
         Choix = np.ones(nb,dtype=np.uint8) * 2
