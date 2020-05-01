@@ -117,6 +117,7 @@ def Simulate(Game):
 
         print("Indices : ",Indices)
 
+        #Je remplis les vecteurs des valeurs de directions ex: Vgauche = [1,1,1,1,....]; Vhaut = [2,2,2,2,....]; ....
         Vgauche = (G[I,X-1,Y] == 0)*1
         Vdroite = (G[I,X+1,Y] == 0)*3
         Vbas = (G[I,X,Y-1] == 0)*4
@@ -124,18 +125,16 @@ def Simulate(Game):
 
         print("Vgauche :",Vgauche)
 
+        #J'incrémente Indices si on a add une direction possible
+        #Par exemple si j'ai add 1 dans LPossibles[I,Indices], alors je dois retrouver 1 dans LPossibles[I,Indices]
         LPossibles[I,Indices] = Vgauche
-        print("LPossibles[I,Indices] : ",LPossibles[I,Indices])
-        Indices = Indices + (LPossibles[I,Indices] == 0)*1
+        Indices = Indices + (LPossibles[I,Indices] != 0)
         LPossibles[I,Indices] = Vhaut
-        print("LPossibles[I,Indices] : ",LPossibles[I,Indices])
-        Indices = Indices + (LPossibles[I,Indices] == 0)*1
+        Indices = Indices + (LPossibles[I,Indices] != 0)
         LPossibles[I,Indices] = Vdroite
-        print("LPossibles[I,Indices] : ",LPossibles[I,Indices])
-        Indices = Indices + (LPossibles[I,Indices] == 0)*1
+        Indices = Indices + (LPossibles[I,Indices] != 0)
         LPossibles[I,Indices] = Vbas
-        print("LPossibles[I,Indices] : ",LPossibles[I,Indices])
-        Indices = Indices + (LPossibles[I,Indices] == 0)*1
+        Indices = Indices + (LPossibles[I,Indices] != 0)
 
         print("LPossibles :",LPossibles)
         print("Indices :",Indices)
