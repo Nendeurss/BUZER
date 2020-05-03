@@ -71,8 +71,8 @@ dy = np.array([0,  0, 1,  0, -1],dtype=np.int8)
 # scores associés à chaque déplacement
 ds = np.array([0,  1,  1,  1,  1],dtype=np.int8)
 
-Debug = True
-nb = 5 # nb de parties
+Debug = False
+nb = 100 # nb de parties
 
 
 def Simulate(Game):
@@ -88,6 +88,7 @@ def Simulate(Game):
 
     # VOTRE CODE ICI
 
+    OldScore = -1
     #On créer le vecteur Vgauche, et on met tout à True
     Vgauche = np.tile(True,nb)
     Vdroite = np.tile(True,nb)
@@ -104,7 +105,7 @@ def Simulate(Game):
     while(boucle) :
         if Debug :print("X : ",X)
         if Debug :print("Y : ",Y)
-        if Debug :print("S : ",S)
+        print("S : ",S)
 
         # marque le passage de la moto
         G[I, X, Y] = 2
@@ -115,7 +116,7 @@ def Simulate(Game):
         #On créer un vecteur d'indice et on met tout à zero
         Indices = np.zeros(nb,dtype=np.int8)
 
-        print("Indices : ",Indices)
+        if Debug :print("Indices : ",Indices)
 
         #Je remplis les vecteurs des valeurs de directions ex: Vgauche = [1,1,1,1,....]; Vhaut = [2,2,2,2,....]; ....
         Vgauche = (G[I,X-1,Y] == 0)*1
@@ -123,7 +124,7 @@ def Simulate(Game):
         Vbas = (G[I,X,Y-1] == 0)*4
         Vhaut = (G[I,X,Y+1] == 0)*2
 
-        print("Vgauche :",Vgauche)
+        if Debug :print("Vgauche :",Vgauche)
 
         #J'incrémente Indices si on a add une direction possible
         #Par exemple si j'ai add 1 dans LPossibles[I,Indices], alors je dois retrouver 1 dans LPossibles[I,Indices]
@@ -136,14 +137,21 @@ def Simulate(Game):
         LPossibles[I,Indices] = Vbas
         Indices = Indices + (LPossibles[I,Indices] != 0)
 
-        print("LPossibles :",LPossibles)
-        print("Indices :",Indices)
+        Indices[Indices == 0] = 1
+
+        if Debug :print("LPossibles :",LPossibles)
+        if Debug :print("Indices :",Indices)
 
         if Debug :print("Vgauche : ",Vgauche)
 
-        # Direction : 2 = vers le haut
-        Choix = np.ones(nb,dtype=np.uint8) * 2
+        R = np.random.randint(12,size=nb)
+        if Debug :print("R : ",R)
+        R = R % Indices
+        if Debug :print("R : ",R)
 
+        # Direction : 2 = vers le haut
+        Choix = LPossibles[I,R]
+        Score = ds[Choix]
 
         #DEPLACEMENT
         DX = dx[Choix]
@@ -152,14 +160,20 @@ def Simulate(Game):
         if Debug : print("DY : ", DY)
         X += DX
         Y += DY
+        S += Score
 
+        NewScore = np.sum(S)
+
+        if(NewScore == OldScore): break
+        OldScore = NewScore 
 
         #debug
         if Debug : AffGrilles(G,X,Y)
-        if Debug : time.sleep(0.1)
+        if Debug : time.sleep(1)
 
     print("Scores : ",np.mean(S))
-
+    print("Total Score : ",NewScore)
+    return NewScore
 
 
 Simulate(GameInit)
