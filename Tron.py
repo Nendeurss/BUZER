@@ -35,14 +35,33 @@ GInit = np.flip(GInit, 0).transpose()
 LARGEUR = 13    # nombre de colonnes + 1
 HAUTEUR = 17    # nombre de lignes + 1
 
-dx = np.array([0, -1, 0,  1,  0],dtype=np.int8)
-dy = np.array([0,  0, 1,  0, -1],dtype=np.int8)
+# dx contient à chaque indice le déplacement en abscisse du joueur en fonction du choix aléatoire
+# dy contient à chaque indice le déplacement en ordonnée du joueur en fonction du choix aléatoire
+# Pour chaque indice, 0 : sur place, 1: left, 2: Up, 3: Right, 4: Down
+dx = np.array([0, -1, 0,  1,  0], dtype=np.int8)
+dy = np.array([0,  0, 1,  0, -1], dtype=np.int8)
 
 # scores associés à chaque déplacement
 ds = np.array([0,  1,  1,  1,  1],dtype=np.int8)
 
-Debug = False
-nb = 10000 # nb de parties
+Debug = False	# Si Debug est activé (True), chaque grilles en parallèles seront affichées dans la console
+
+# Affiche les grilles de jeu exécutées en parallèle de l'application dans la console (MODE DEBUG)
+def AffGrilles(G, X, Y):
+    nbG, larg, haut = G.shape
+    for y in range(haut - 1, -1, -1):
+        for i in range(nbG):
+            for x in range(larg):
+                g = G[i]
+                c = ' '
+                if G[i, x, y] == 1: c = 'M'  # mur
+                if G[i, x, y] == 2: c = 'O'  # trace
+                if (X[i], Y[i]) == (x, y): c = 'X'  # joueur
+                print(c, sep='', end='')
+            print(" ", sep='', end='')  # espace entre les grilles
+        print("")  # retour à la ligne
+
+nb = 10000 		# nb de parties en parallèle
 
 # La classe Game nous permet de regrouper dans un même objet :
 # - la grille,
@@ -61,8 +80,15 @@ class Game:
     def copy(self):
         return copy.deepcopy(self)
 
+# La position initiale du joueur est aléatoire, on s'assure que cette position n'est pas un obstacle
+randX = 0
+randY = 0
+while Data[randX][randY] == 1:
+    randX = np.random.randint(1, 11)
+    randY = np.random.randint(1, 15)
+
 # Création du jeu avec la grille de jeu définit au début
-GameInit = Game(GInit, 3, 5)
+GameInit = Game(GInit, randX, randY)
 
 # ---------------------------------------------------------------------------------------------------------------------
 #   Création de la fenêtre principale  - NE PAS TOUCHER
@@ -179,14 +205,17 @@ def FindpossiblePlays(Game):
 
 # Simule une partie entière
 def SimulateGame(Game):
+	# La fonction simulant une partie s'arrête que lors d'une instruction break
     while (1):
-
+		# On récupère la liste de position(s) jouable(s)
         possiblePlays = FindpossiblePlays(Game)
-
+		# On récupère le nombre de position(s) jouable(s)
         pPLen = len(possiblePlays)
 
+		# S'il n'y a aucune position jouable, fin de jeu, donc fin de simulation
         if (pPLen == 0):
             return Game.Score
+		# Sinon on déplace le joueur dans une des directions possible aléatoirement
         else:
             index = random.randrange(len(possiblePlays))
             x, y = Game.PlayerX, Game.PlayerY
@@ -264,59 +293,69 @@ def Play(Game):
     # la partie continue, on retourne False
     return False
 
+
+# ---------------------------------------------------------------------------------------------
+# Gestion des parties en parallèle
+# ---------------------------------------------------------------------------------------------
+
+# Simule les nb parties en parallèle
 def Simulate(Game):
 
-    # on copie les datas de départ pour créer plusieurs parties en //
-    G      = np.tile(Game.Grille,(nb,1,1))
-    X      = np.tile(Game.PlayerX,nb)
-    Y      = np.tile(Game.PlayerY,nb)
-    S      = np.tile(Game.Score,nb)
-    I      = np.arange(nb)  # 0,1,2,3,4,5...
-    boucle = True
-    if Debug : AffGrilles(G,X,Y)
+    # On copie les datas de départ pour créer plusieurs parties en parallèles
+    G      = np.tile(Game.Grille,(nb,1,1))	# G contient la liste des grilles de jeu qui seront jouées en parallèle
+    X      = np.tile(Game.PlayerX,nb)		# X contient la liste des positions en abscisse du joueur sur chaque grille
+    Y      = np.tile(Game.PlayerY,nb)		# Y contient la liste des positions en ordonnée du joueur sur chaque grille
+    S      = np.tile(Game.Score,nb)			# S contient la liste des scores de chaque grille
+    I      = np.arange(nb)  				# I est une liste d'indice permettant d'itérer/d'accéder à une grille en particulier
 
     # VOTRE CODE ICI
+	# ---------------------------------------------------------------------------------------------
+    if Debug :
+        AffGrilles(G,X,Y)
 
     OldScore = -1
-    #On créer le vecteur Vgauche, et on met tout à True
+
+    #On créer des vecteurs pour chaque directions, que l'on set à True, qui vont nous indiquer si une case est jouable
     Vgauche = np.tile(True,nb)
     Vdroite = np.tile(True,nb)
     Vhaut = np.tile(True,nb)
     Vbas = np.tile(True,nb)
+
     #On transforme les True en 1 et les False en 0
     Vgauche = (Vgauche == 1)*1
     Vdroite = (Vdroite == 1)*1
     Vhaut = (Vhaut == 1)*1
     Vbas = (Vbas == 1)*1
 
-    
+    while(1) :
+        if Debug :
+            print("X : ",X)
+            print("Y : ",Y)
+            print("S : ",S)
 
-    while(boucle) :
-        if Debug :print("X : ",X)
-        if Debug :print("Y : ",Y)
-        if Debug :print("S : ",S)
-
-        # marque le passage de la moto
+        # On marque le passage de la moto dans chaque grille
         G[I, X, Y] = 2
 
-        #On créer un vecteur de tableau des coups possibles et on met tout à 0
-        LPossibles = np.zeros((nb,4),dtype=np.int8)
+        # On crée un tableau de nbx4 remplis de 0 pour stocker les directions possible de chaque joueur sur chaque grille.
+        LPossibles = np.zeros((nb,4), dtype=np.int8)
 
-        #On créer un vecteur d'indice et on met tout à zero
+        # On crée un vecteur permmettant de connaître les directions possibles de chaque joueur sur chaque grille
         Indices = np.zeros(nb,dtype=np.int8)
 
-        if Debug :print("Indices : ",Indices)
+        if Debug :
+            print("Indices : ",Indices)
 
-        #Je remplis les vecteurs des valeurs de directions ex: Vgauche = [1,1,1,1,....]; Vhaut = [2,2,2,2,....]; ....
+        # Je remplis les vecteurs des valeurs de directions ex: Vgauche = [1,1,1,1,....]; Vhaut = [2,2,2,2,....]; ....
         Vgauche = (G[I,X-1,Y] == 0)*1
+        Vhaut = (G[I,X,Y+1] == 0)*2
         Vdroite = (G[I,X+1,Y] == 0)*3
         Vbas = (G[I,X,Y-1] == 0)*4
-        Vhaut = (G[I,X,Y+1] == 0)*2
 
-        if Debug :print("Vgauche :",Vgauche)
+        if Debug :
+            print("Vgauche :",Vgauche)
 
-        #J'incrémente Indices si on a add une direction possible
-        #Par exemple si j'ai add 1 dans LPossibles[I,Indices], alors je dois retrouver 1 dans LPossibles[I,Indices]
+        # J'incrémente Indices si on a add une direction possible
+        # Par exemple si j'ai add 1 dans LPossibles[I,Indices], alors je dois retrouver 1 dans LPossibles[I, Indices]
         LPossibles[I,Indices] = Vgauche
         Indices = Indices + (LPossibles[I,Indices] != 0)
         LPossibles[I,Indices] = Vhaut
@@ -328,39 +367,47 @@ def Simulate(Game):
 
         Indices[Indices == 0] = 1
 
-        if Debug :print("LPossibles :",LPossibles)
-        if Debug :print("Indices :",Indices)
-
-        if Debug :print("Vgauche : ",Vgauche)
+        if Debug :
+            print("LPossibles :",LPossibles)
+            print("Indices :",Indices)
+            print("Vgauche : ",Vgauche)
 
         R = np.random.randint(12,size=nb)
-        if Debug :print("R : ",R)
-        R = R % Indices
-        if Debug :print("R : ",R)
+        if Debug :
+            print("R : ",R)
 
-        # Direction : 2 = vers le haut
+        R = R % Indices
+        if Debug :
+            print("R : ",R)
+
+        # On récupère le choix de direction : 1 = Left, 2 = Up, 3 = Right, 4 = Down
         Choix = LPossibles[I,R]
+		# On récupère le score
         Score = ds[Choix]
 
-        #DEPLACEMENT
+        # On modifie la position de chaque joueur sur chaque grille et on incrémente le score de chaque grille
         DX = dx[Choix]
         DY = dy[Choix]
-        if Debug : print("DX : ", DX)
-        if Debug : print("DY : ", DY)
+        if Debug :
+            print("DX : ", DX)
+            print("DY : ", DY)
+
         X += DX
         Y += DY
         S += Score
 
         NewScore = np.sum(S)
 
-        if(NewScore == OldScore): break
-        OldScore = NewScore 
+		# Si l'ancien score correspond au nouveau, c'est que le joueur ne bouge plus, la partie est donc terminée, on sort de la simulation
+        if(NewScore == OldScore):
+            break
+        OldScore = NewScore
 
         #debug
-        if Debug : AffGrilles(G,X,Y)
-        if Debug : time.sleep(1)
+        if Debug :
+            AffGrilles(G,X,Y)
+            time.sleep(1)
 
-    
     return np.mean(S)
 
 # ---------------------------------------------------------------------------------------------------------------------
