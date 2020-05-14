@@ -339,7 +339,7 @@ def Simulate(Game):
         # On crée un tableau de nbx4 remplis de 0 pour stocker les directions possible de chaque joueur sur chaque grille.
         LPossibles = np.zeros((nb,4), dtype=np.int8)
 
-        # On crée un vecteur permmettant de connaître les directions possibles de chaque joueur sur chaque grille
+        # On crée un vecteur permettant de connaître la prochaine case disponible dans chaque liste
         Indices = np.zeros(nb,dtype=np.int8)
 
         if Debug :
