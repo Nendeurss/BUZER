@@ -50,7 +50,10 @@ canvas.place(x=0,y=0)
 Grille = [ [0,0,1], 
            [2,0,0], 
            [0,0,0] ]  # attention les lignes représentent les colonnes de la grille
-           
+
+Winner = 0 #1 Si c'est le joueur, 2 Si c'est l'IA
+Score = np.zeros(2,encode=uft-8)
+
 Grille = np.array(Grille)
 Grille = Grille.transpose()  # pour avoir x,y
            
@@ -61,12 +64,58 @@ Grille = Grille.transpose()  # pour avoir x,y
 # gestion du joueur humain et de l'IA
 # VOTRE CODE ICI 
 
-def Play(x,y):             
+def Play(x,y):
+    global Winner          
     Grille[x][y] = 1
-   
-          
+    if(DetectWin(1)):
+        Winner = 1
+        print("Winner == 1 : ",Winner == 1)
+
+
+def DetectWin(Player):
+    return DetectHorizontalWin(Player) or DetectVerticalWin(Player) or DetectDiagonalWin(Player)
+
+def DetectVerticalWin(Player):
+    nbOfPlayerToken = 0
+    for i in range(3):
+        for j in range(3):
+            if(Grille[i][j] == Player):
+                nbOfPlayerToken += 1
+        if(nbOfPlayerToken == 3):
+            return True
+        else:
+            nbOfPlayerToken = 0
+    return False
+
+def DetectHorizontalWin(Player):
+    nbOfPlayerToken = 0
+    for i in range(3):
+        for j in range(3):
+            if(Grille[j][i] == Player):
+                nbOfPlayerToken += 1
+        if(nbOfPlayerToken == 3):
+            return True
+        else:
+            nbOfPlayerToken = 0
+    return False
+
+def DetectDiagonalWin(Player):
+    nbOfPlayerToken = 0
+    for i in range(3):
+        if(Grille[i][i] == Player):
+            nbOfPlayerToken += 1
+    if(nbOfPlayerToken == 3): 
+        return True
+    nbOfPlayerToken = 0
+    for i in range(2,0,-1):
+        if(Grille[i][i] == Player):
+            nbOfPlayerToken +=1
+    if(nbOfPlayerToken == 3): 
+        return True
     
-    
+    return False        
+
+
 ################################################################################
 #    
 # Dessine la grille de jeu
@@ -75,9 +124,13 @@ def Dessine(PartieGagnee = False):
         ## DOC canvas : http://tkinter.fdex.eu/doc/caw.html
         canvas.delete("all")
         
-        for i in range(4):
-            canvas.create_line(i*100,0,i*100,300,fill="blue", width="4" )
-            canvas.create_line(0,i*100,300,i*100,fill="blue", width="4" )
+        print("Partie Gagnee : ",PartieGagnee)
+        if(PartieGagnee):
+            if(Winner == 1):
+                DrawGrille("yellow")
+                print("Drawing Yellow")
+        else:        
+            DrawGrille("blue")
             
         for x in range(3):
             for y in range(3):
@@ -90,7 +143,11 @@ def Dessine(PartieGagnee = False):
                     canvas.create_oval(xc+10,yc+10,xc+90,yc+90,outline="yellow", width="4" )
         
        
-        
+def DrawGrille(color):
+    for i in range(4):
+        canvas.create_line(i*100,0,i*100,300,fill=color, width="4" )
+        canvas.create_line(0,i*100,300,i*100,fill=color, width="4" )
+
   
 ####################################################################################
 #
@@ -107,8 +164,8 @@ def MouseClick(event):
     print("clicked at", x,y)
     
     Play(x,y)  # gestion du joueur humain et de l'IA
-    
-    Dessine()
+    print("Winner == 1 : ",Winner == 1)
+    Dessine(Winner == True)
     
 canvas.bind('<ButtonPress-1>',    MouseClick)
 
